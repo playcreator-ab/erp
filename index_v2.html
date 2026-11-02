@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Soundboard</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1 { margin-bottom: 5px; }
+        p { color: #aaa; margin-top: 0; margin-bottom: 25px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 900px;
+        }
+        .card {
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+        .card.active {
+            background: #2e7d32;
+            border-color: #4caf50;
+            transform: scale(1.03);
+        }
+        .card.stop-card.active {
+            background: #c62828;
+            border-color: #f44336;
+        }
+        .key-label {
+            font-size: 0.85rem;
+            color: #ff9800;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .sound-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .instructions {
+            margin-top: 30px;
+            background: #1a1a1a;
+            padding: 15px 25px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            max-width: 900px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Presenter Soundboard</h1>
+    <p>Click anywhere on the screen once after opening to enable browser audio.</p>
+
+    <div class="grid">
+        <div class="card" id="card-up">
+            <div class="key-label">Up (← / PgUp)</div>
+            <div class="sound-name">Vine.mp3</div>
+        </div>
+        <div class="card" id="card-down">
+            <div class="key-label">Down (→ / PgDn)</div>
+            <div class="sound-name">Error.mp3</div>
+        </div>
+        <div class="card" id="card-square">
+            <div class="key-label">Square (Tab)</div>
+            <div class="sound-name">Fah.mp3</div>
+        </div>
+        <div class="card" id="card-uplp">
+            <div class="key-label">UpLP (Shift+F5 / Esc)</div>
+            <div class="sound-name">Goku.mp3</div>
+        </div>
+        <div class="card" id="card-downlp">
+            <div class="key-label">DownLP (B Key)</div>
+            <div class="sound-name">Apple.mp3</div>
+        </div>
+        <div class="card stop-card" id="card-stop">
+            <div class="key-label">Spacebar / Backspace</div>
+            <div class="sound-name">Stop All Audio</div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <strong>Remote Controls:</strong><br>
+        • <strong>Up (Arrow Left / Page Up):</strong> Plays <code>Vine.mp3</code>[cite: 6]<br>
+        • <strong>Down (Arrow Right / Page Down):</strong> Plays <code>Error.mp3</code>[cite: 3]<br>
+        • <strong>Square (Tab Key):</strong> Plays <code>Fah.mp3</code>[cite: 4]<br>
+        • <strong>UpLP (Shift + F5 / Esc):</strong> Plays <code>Goku.mp3</code>[cite: 5]<br>
+        • <strong>DownLP (B Key):</strong> Plays <code>Apple.mp3</code>[cite: 2]<br>
+        • <strong>Spacebar / Backspace:</strong> Emergency silence switch.
+    </div>
+
+    <script>
+        const audioCache = {
+            vine: new Audio('Vine.mp3'),
+            error: new Audio('Error.mp3'),
+            fah: new Audio('Fah.mp3'),
+            goku: new Audio('Goku.mp3'),
+            apple: new Audio('Apple.mp3')
+        };
+
+        function stopAll() {
+            Object.values(audioCache).forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+            flashCard('card-stop');
+        }
+
+        function playSound(soundKey, cardId) {
+            stopAll();
+            const audio = audioCache[soundKey];
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(err => console.log("Audio play error:", err));
+                flashCard(cardId);
+            }
+        }
+
+        function flashCard(cardId) {
+            const el = document.getElementById(cardId);
+            if (el) {
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 250);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Tab', 'Escape', 'F5', ' '].includes(e.key)) {
+                e.preventDefault();
+            }
+
+            // Up: Arrow Left / Page Up -> Vine.mp3
+            if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                playSound('vine', 'card-up');
+            }
+            // Down: Arrow Right / Page Down -> Error.mp3
+            else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+                playSound('error', 'card-down');
+            }
+            // Square: Tab -> Fah.mp3
+            else if (e.key === 'Tab') {
+                playSound('fah', 'card-square');
+            }
+            // UpLP: Shift+F5 OR Escape -> Goku.mp3
+            else if (e.key === 'Escape' || (e.key === 'F5' && e.shiftKey)) {
+                playSound('goku', 'card-uplp');
+            }
+            // DownLP: B Key -> Apple.mp3
+            else if (e.key.toLowerCase() === 'b') {
+                playSound('apple', 'card-downlp');
+            }
+            // Stop Switch
+            else if (e.key === ' ' || e.key === 'Backspace') {
+                stopAll();
+            }
+        });
+    </script>
+</body>
+</html>
